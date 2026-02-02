@@ -1,12 +1,25 @@
 import { useEffect, useRef } from "react";
 import type { PDFPageProxy, ViewportParameters } from "pdfjs-dist";
+import OverlayLayer from "./OverlayLayer";
+import type { TextObject } from "../types/overlay";
 
 type Props = {
   page: PDFPageProxy | null;
   width: number;
+  overlay: TextObject[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  onCommitText: (id: string, text: string) => void;
 };
 
-export default function PageViewport({ page, width }: Props) {
+export default function PageViewport({
+  page,
+  width,
+  overlay,
+  selectedId,
+  onSelect,
+  onCommitText
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -25,5 +38,15 @@ export default function PageViewport({ page, width }: Props) {
     page.render({ canvasContext: context, viewport: scaled });
   }, [page, width]);
 
-  return <canvas ref={canvasRef} />;
+  return (
+    <div className="page-viewport">
+      <canvas ref={canvasRef} />
+      <OverlayLayer
+        objects={overlay}
+        selectedId={selectedId}
+        onSelect={onSelect}
+        onCommitText={onCommitText}
+      />
+    </div>
+  );
 }
