@@ -59,3 +59,16 @@
   height: 100%;
   border-left: 1px dotted #222;
 }
+
+.page {
+  margin-top: 16px;
+  border: 1px solid #e0d8cc;
+  background: #fff;
+  padding: 12px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
