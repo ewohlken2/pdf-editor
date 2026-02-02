@@ -3,7 +3,8 @@ import type { TextObject } from "../types/overlay";
 export type OverlayAction =
   | { type: "setObjects"; objects: TextObject[] }
   | { type: "select"; id: string | null }
-  | { type: "replaceText"; id: string; text: string };
+  | { type: "replaceText"; id: string; text: string }
+  | { type: "move"; id: string; x: number; y: number };
 
 export type OverlayState = {
   objects: TextObject[];
@@ -28,6 +29,15 @@ export function overlayReducer(
         ...state,
         objects: state.objects.map((obj) =>
           obj.id === action.id ? { ...obj, text: action.text } : obj
+        )
+      };
+    case "move":
+      return {
+        ...state,
+        objects: state.objects.map((obj) =>
+          obj.id === action.id
+            ? { ...obj, box: { ...obj.box, x: action.x, y: action.y } }
+            : obj
         )
       };
     default:

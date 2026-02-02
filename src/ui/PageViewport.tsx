@@ -10,6 +10,7 @@ type Props = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onCommitText: (id: string, text: string) => void;
+  onMove: (id: string, x: number, y: number) => void;
 };
 
 export default function PageViewport({
@@ -18,7 +19,8 @@ export default function PageViewport({
   overlay,
   selectedId,
   onSelect,
-  onCommitText
+  onCommitText,
+  onMove
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -46,6 +48,7 @@ export default function PageViewport({
         selectedId={selectedId}
         onSelect={onSelect}
         onCommitText={onCommitText}
+        onMove={onMove}
       />
     </div>
   );
