@@ -6,6 +6,7 @@ import { overlayReducer, initialOverlayState } from "./state/overlayStore";
 import { toTextObject } from "./pdf/textExtraction";
 import { History } from "./state/history";
 import type { TextObject } from "./types/overlay";
+import { clampWidthToViewport } from "./utils/layout";
 
 export default function App() {
   const [page, setPage] = useState<import("pdfjs-dist").PDFPageProxy | null>(null);
@@ -22,7 +23,7 @@ export default function App() {
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new ResizeObserver(() => {
-      setContainerWidth(containerRef.current!.clientWidth);
+      setContainerWidth(clampWidthToViewport(containerRef.current!.clientWidth));
     });
     observer.observe(containerRef.current);
     return () => observer.disconnect();
@@ -34,11 +35,14 @@ export default function App() {
     const buffer = await file.arrayBuffer();
     const doc = await loadPdf(buffer);
     const firstPage = await loadPage(doc, 0);
+    const baseViewport = firstPage.getViewport({ scale: 1 });
+    const scale = containerWidth / baseViewport.width;
+    const scaledViewport = firstPage.getViewport({ scale });
     const text = await firstPage.getTextContent();
     const objects = text.items
       .filter((item) => "str" in item)
       .map((item, index) =>
-        toTextObject(`r${index}`, item as any, 12)
+        toTextObject(`r${index}`, item as any, 12, scaledViewport)
       );
 
     const nextState = { objects, selectedId: null };
