@@ -4,7 +4,8 @@ export type OverlayAction =
   | { type: "setObjects"; objects: TextObject[] }
   | { type: "select"; id: string | null }
   | { type: "replaceText"; id: string; text: string }
-  | { type: "move"; id: string; x: number; y: number };
+  | { type: "move"; id: string; x: number; y: number }
+  | { type: "insert"; object: TextObject };
 
 export type OverlayState = {
   objects: TextObject[];
@@ -40,6 +41,8 @@ export function overlayReducer(
             : obj
         )
       };
+    case "insert":
+      return { ...state, objects: [...state.objects, action.object] };
     default:
       return state;
   }

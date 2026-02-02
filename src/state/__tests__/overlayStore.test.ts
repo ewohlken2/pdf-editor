@@ -21,3 +21,20 @@ it("replaces text", () => {
   });
   expect(next.objects[0]?.text).toBe("Updated");
 });
+
+it("inserts a new object", () => {
+  const next = overlayReducer(
+    { objects: [], selectedId: null },
+    {
+      type: "insert",
+      object: {
+        id: "new",
+        text: "Paste",
+        fontSize: 12,
+        box: { x: 10, y: 10, width: 50, height: 12 },
+        baseline: 22
+      }
+    }
+  );
+  expect(next.objects).toHaveLength(1);
+});

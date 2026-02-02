@@ -5,6 +5,7 @@ import PageViewport from "./ui/PageViewport";
 import { overlayReducer, initialOverlayState } from "./state/overlayStore";
 import { toTextObject } from "./pdf/textExtraction";
 import { History } from "./state/history";
+import type { TextObject } from "./types/overlay";
 
 export default function App() {
   const [page, setPage] = useState<import("pdfjs-dist").PDFPageProxy | null>(null);
@@ -16,6 +17,7 @@ export default function App() {
     initialOverlayState
   );
   const [history] = useState(() => new History(initialOverlayState()));
+  const [clipboard, setClipboard] = useState<TextObject | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -65,6 +67,33 @@ export default function App() {
     });
   }
 
+  function handleCopy() {
+    const selected = overlayState.objects.find(
+      (obj) => obj.id === overlayState.selectedId
+    );
+    if (selected) setClipboard({ ...selected });
+  }
+
+  function handlePaste() {
+    if (!clipboard) return;
+    const id = `ins-${Date.now()}`;
+    const offset = 10;
+    const next = {
+      ...clipboard,
+      id,
+      box: {
+        ...clipboard.box,
+        x: clipboard.box.x + offset,
+        y: clipboard.box.y + offset
+      }
+    };
+    dispatch({ type: "insert", object: next });
+    history.push({
+      ...overlayState,
+      objects: [...overlayState.objects, next]
+    });
+  }
+
   function undo() {
     const previous = history.undo();
     dispatch({ type: "setObjects", objects: previous.objects });
@@ -81,6 +110,8 @@ export default function App() {
       <main className="app__main" ref={containerRef}>
         <div className="toolbar">
           <input type="file" accept="application/pdf" onChange={onFileChange} />
+          <button onClick={handleCopy}>Copy</button>
+          <button onClick={handlePaste}>Paste</button>
           <button onClick={undo}>Undo</button>
           <button onClick={redo}>Redo</button>
         </div>
