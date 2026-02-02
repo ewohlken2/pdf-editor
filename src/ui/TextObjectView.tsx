@@ -1,25 +1,56 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { TextObject } from "../types/overlay";
+import { snapPosition } from "../utils/snap";
 
 type Props = {
   object: TextObject;
   selected: boolean;
   onSelect: () => void;
   onCommit: (text: string) => void;
+  onMove?: (id: string, x: number, y: number) => void;
+  onDragGuides?: (guides: { x?: number; y?: number }[]) => void;
+  snapX?: number[];
+  snapY?: number[];
 };
 
 export default function TextObjectView({
   object,
   selected,
   onSelect,
-  onCommit
+  onCommit,
+  onMove = () => {},
+  onDragGuides = () => {},
+  snapX = [],
+  snapY = []
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(object.text);
+  const startRef = useRef<{ x: number; y: number } | null>(null);
 
   function commit() {
     onCommit(draft);
     setEditing(false);
+  }
+
+  function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (editing) return;
+    startRef.current = { x: event.clientX, y: event.clientY };
+    (event.target as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  function onPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (!startRef.current) return;
+    const dx = event.clientX - startRef.current.x;
+    const dy = event.clientY - startRef.current.y;
+    const nextX = snapPosition(object.box.x + dx, snapX, 4);
+    const nextY = snapPosition(object.box.y + dy, snapY, 4);
+    onDragGuides([{ x: nextX }, { y: nextY }]);
+    onMove(object.id, nextX, nextY);
+  }
+
+  function onPointerUp() {
+    startRef.current = null;
+    onDragGuides([]);
   }
 
   return (
@@ -38,6 +69,9 @@ export default function TextObjectView({
         setDraft(object.text);
         setEditing(true);
       }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
     >
       {editing ? (
         <input
